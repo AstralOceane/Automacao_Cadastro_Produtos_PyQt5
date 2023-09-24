@@ -1,5 +1,8 @@
 import sys
+import openpyxl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QComboBox, QMessageBox
+from PyQt5.QtTest import QTest
+from PyQt5.QtCore import Qt, QTimer
 
 class CadastroProdutosApp(QMainWindow):
     def __init__(self):
@@ -42,9 +45,14 @@ class CadastroProdutosApp(QMainWindow):
         quantidade = self.entry_quantidade.text()
         categoria = self.combo_categoria.currentText()
 
-        # Você pode chamar uma função aqui para executar comandos externos com esses valores
-        # Por enquanto, apenas mostraremos uma mensagem
-        QMessageBox.information(self, "Sucesso", "Produto cadastrado com sucesso!")
+        # Simule um cadastro de sucesso
+        success_box = QMessageBox()
+        success_box.setText("Produto cadastrado com sucesso!")
+
+        # Inicie um temporizador para fechar a mensagem após 2 segundos
+        QTimer.singleShot(2000, success_box.accept)
+
+        success_box.exec_()
 
         # Limpe os campos após o salvamento
         self.entry_cliente.clear()
@@ -52,8 +60,40 @@ class CadastroProdutosApp(QMainWindow):
         self.entry_quantidade.clear()
         self.combo_categoria.setCurrentIndex(0)
 
+def preencher_campos_e_clicar(window):
+    # Abra o arquivo Excel
+    excel_file_path = 'vendas_de_produtos.xlsx'
+    workbook = openpyxl.load_workbook(excel_file_path)
+    worksheet = workbook.active
+
+    # Leia os dados da primeira linha do arquivo Excel
+    row = next(worksheet.iter_rows(min_row=2, values_only=True))
+    cliente, produto, _, _ = row
+
+    # Preencha os campos com os valores lidos do arquivo Excel
+    window.entry_cliente.setText(cliente)
+    window.entry_produto.setText(produto)
+    window.entry_quantidade.setText("10")  # Defina a quantidade como 10
+
+    # Clique no botão "Salvar"
+    QTest.mouseClick(window.button_salvar, Qt.LeftButton)
+
+    # Aguarde 2 segundos e, em seguida, envie a tecla "ENTER"
+    QTimer.singleShot(2000, lambda: pressionar_enter_na_janela("Python"))
+
+def pressionar_enter_na_janela(janela_titulo):
+    # Enviar a tecla "ENTER" para a janela com o título "Python"
+    for widget in QApplication.topLevelWidgets():
+        if widget.windowTitle() == janela_titulo:
+            widget.setFocus()
+            QTest.keyClick(widget, Qt.Key_Enter)
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = CadastroProdutosApp()
     window.show()
+
+    # Aguarde 2 segundos e, em seguida, preencha os campos e clique no botão "Salvar"
+    QTimer.singleShot(2000, lambda: preencher_campos_e_clicar(window))
+
     sys.exit(app.exec_())
