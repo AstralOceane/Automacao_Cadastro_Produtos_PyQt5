@@ -28,6 +28,10 @@ O aplicativo abrirá uma janela onde você pode cadastrar os produtos. Os campos
 
 O aplicativo registrará automaticamente os produtos um por um até que todos
 
+##  Licença
+
+Este projeto é licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
+
 ## Autor 
 
 Astral Oceane - https://github.com/AstralOceane
