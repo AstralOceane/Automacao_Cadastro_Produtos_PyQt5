@@ -67,7 +67,6 @@ def preencher_campos_e_clicar(window):
     # Se estivermos na primeira chamada, inicie o loop iterando pelas linhas
     if not hasattr(window, 'row_iterator'):
         window.row_iterator = iter(worksheet.iter_rows(min_row=2, values_only=True))
-        window.current_row = None
 
     try:
         # Leia os dados da próxima linha da planilha
@@ -88,6 +87,7 @@ def preencher_campos_e_clicar(window):
         QTest.mouseClick(window.button_salvar, Qt.LeftButton)
 
         # Aguarde mais 2 segundos antes de processar a próxima linha
+        QTimer.singleShot(2000, lambda: preencher_campos_e_clicar(window))
         
     except StopIteration:
         print("Todos os clientes foram registrados.")
