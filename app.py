@@ -1,5 +1,8 @@
 import sys
+import openpyxl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QComboBox, QMessageBox
+from PyQt5.QtTest import QTest
+from PyQt5.QtCore import Qt, QTimer
 
 class CadastroProdutosApp(QMainWindow):
     def __init__(self):
@@ -7,9 +10,11 @@ class CadastroProdutosApp(QMainWindow):
         self.initUI()
 
     def initUI(self):
+        # Configuração da interface gráfica
         self.setWindowTitle("Cadastro de Produtos")
         self.setGeometry(100, 100, 400, 250)
 
+        # Criação de elementos da interface
         self.label_cliente = QLabel("Cliente:", self)
         self.label_cliente.setGeometry(20, 20, 60, 20)
         self.entry_cliente = QLineEdit(self)
@@ -37,23 +42,65 @@ class CadastroProdutosApp(QMainWindow):
         self.button_salvar.clicked.connect(self.salvar)
 
     def salvar(self):
-        cliente = self.entry_cliente.text()
-        produto = self.entry_produto.text()
-        quantidade = self.entry_quantidade.text()
-        categoria = self.combo_categoria.currentText()
+               
+        # Simular um cadastro de sucesso exibindo uma mensagem
+        success_box = QMessageBox()
+        success_box.setText("Produto cadastrado com sucesso!")
 
-        # Você pode chamar uma função aqui para executar comandos externos com esses valores
-        # Por enquanto, apenas mostraremos uma mensagem
-        QMessageBox.information(self, "Sucesso", "Produto cadastrado com sucesso!")
+        # Iniciar um temporizador para fechar a mensagem após 2 segundos
+        QTimer.singleShot(2000, success_box.accept)
 
-        # Limpe os campos após o salvamento
+        success_box.exec_()
+
+        # Limpar os campos após o salvamento
         self.entry_cliente.clear()
         self.entry_produto.clear()
         self.entry_quantidade.clear()
         self.combo_categoria.setCurrentIndex(0)
 
+def preencher_campos_e_clicar(window):
+    # Abra o arquivo Excel
+    excel_file_path = 'vendas_de_produtos.xlsx'
+    workbook = openpyxl.load_workbook(excel_file_path)
+    worksheet = workbook.active
+
+    # Se estivermos na primeira chamada, inicie o loop iterando pelas linhas
+    if not hasattr(window, 'row_iterator'):
+        window.row_iterator = iter(worksheet.iter_rows(min_row=2, values_only=True))
+        window.current_row = None
+
+    try:
+        # Leia os dados da próxima linha da planilha
+        window.current_row = next(window.row_iterator)
+        cliente, produto, quantidade, categoria = window.current_row
+
+        # Preencha os campos com os valores lidos do arquivo Excel
+        window.entry_cliente.setText(cliente)
+        window.entry_produto.setText(produto)
+        window.entry_quantidade.setText(str(quantidade))
+
+        # Selecione a categoria correta na combobox
+        index = window.combo_categoria.findText(categoria)
+        if index >= 0:
+            window.combo_categoria.setCurrentIndex(index)
+
+        # Clique no botão "Salvar"
+        QTest.mouseClick(window.button_salvar, Qt.LeftButton)
+
+        # Aguarde mais 2 segundos antes de processar a próxima linha
+        
+    except StopIteration:
+        print("Todos os clientes foram registrados.")
+        # Feche a aplicação após registrar todos os clientes
+        QTimer.singleShot(2000, window.close)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = CadastroProdutosApp()
     window.show()
+
+    # Aguardar 2 segundos e, em seguida, preencher os campos e clicar no botão "Salvar"
+    QTimer.singleShot(2000, lambda: preencher_campos_e_clicar(window))
+
     sys.exit(app.exec_())
